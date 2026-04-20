@@ -3,12 +3,15 @@ import Filter from "./Components/Filter";
 import PersonForm from "./Components/PersonForm";
 import Persons from "./Components/Persons";
 import personServices from "./Services/persons";
+import Notification from "./Components/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [message, setMessage] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   useEffect(() => {
     personServices.getAll().then((data) => {
@@ -66,6 +69,13 @@ const App = () => {
         setNewName("");
         setNewPhoneNumber("");
       });
+
+      setMessage(`Added ${person.name}`);
+      setSuccess(true);
+      setTimeout(() => {
+        setMessage(null);
+        setSuccess(null);
+      }, 5000);
     }
   };
 
@@ -79,14 +89,26 @@ const App = () => {
 
       if (deletePerson) {
         const newPersons = persons.filter((person) => person.id != id);
-        personServices.remove(id);
-        setPersons(newPersons);
+        personServices
+          .remove(id)
+          .then((_) => {
+            setPersons(newPersons);
+          })
+          .catch((error) => {
+            setMessage(`Person has already been deleted`);
+            setSuccess(false);
+            setTimeout(() => {
+              setMessage(null);
+              setSuccess(null);
+            }, 5000);
+          });
       }
     };
   };
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} success={success} />
       <Filter value={filter} onChange={handleFilterChange} />
       <h2>Add a new</h2>
       <PersonForm
